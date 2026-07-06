@@ -1,26 +1,10 @@
 import sqlite3 from 'sqlite3';
 import crypto from 'crypto';
 import util from 'util';
+import { db, dbRun } from './db.js';
 
 // così script restituisce un valore di tipo Promise invece di callback
 const scrypt = util.promisify(crypto.scrypt);
-
-// Connessione con il database
-const db = new sqlite3.Database('./database.sqlite', (err) => {
-  if (err) {
-    console.error(err.message);
-    throw err;
-  }
-  console.log('Connected to the SQLite database.');
-});
-
-// Helper per promisificare db.run
-const dbRun = (sql, params = []) => new Promise((resolve, reject) => {
-  db.run(sql, params, (err) => {
-    if (err) reject(err);
-    else resolve();
-  });
-});
 
 // Setup del db
 const setupDatabase = async () => {
