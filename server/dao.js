@@ -7,7 +7,7 @@ const scrypt = util.promisify(crypto.scrypt);
 
 // --- UTENTI ---
 
-// Login
+// Recupero utente con username e password
 export const getUser = async (username, password) => {
   try {
     const row = await dbGet('SELECT * FROM users WHERE username = ?', [username]);
