@@ -71,7 +71,7 @@ export const getTournament = async (code) => {
 
 // --- STATISTICHE ---
 
-// Aggiorna statistiche
+// Aggiorna statistiche (upsert)
 export const updateStatistics = async (userId, difficulty, isWin) => {
   const sql = `
     INSERT INTO statistics (user_id, difficulty, played, won)

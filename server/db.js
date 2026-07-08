@@ -17,7 +17,7 @@ export const dbRun = (sql, params = []) => new Promise((resolve, reject) => {
   });
 });
 
-// Restituisce la riga corrispondente
+// Promise per restituire la riga corrispondente
 export const dbGet = (sql, params = []) => new Promise((resolve, reject) => {
   db.get(sql, params, (err, row) => {
     if (err) reject(err);
@@ -25,7 +25,7 @@ export const dbGet = (sql, params = []) => new Promise((resolve, reject) => {
   });
 });
 
-// Restituisce tutte le righe corrispondenti
+// Promise per restituire tutte le righe corrispondenti
 export const dbAll = (sql, params = []) => new Promise((resolve, reject) => {
   db.all(sql, params, (err, rows) => {
     if (err) reject(err);
