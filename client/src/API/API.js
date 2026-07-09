@@ -4,7 +4,7 @@ import { User, MatchState, Stat } from '../models/Models.js';
 const SERVER_URL = 'http://localhost:3001/api';
 
 /**
- * Helper per il parsing delle response.
+ * Helper per il parsing delle risposte del server
  * Resiliente a body vuoti (es. per il logout backend senza body)
  */
 async function handleResponse(response) {
@@ -14,15 +14,11 @@ async function handleResponse(response) {
         // Se text contiene qualcosa lo trasformiamo in JSON, altrimenti restituiamo null
         return text ? JSON.parse(text) : null;
     } else {
-        let errDetails;
-        try {
-            // Proviamo ad estrarre il corpo dell'errore
-            errDetails = await response.json();
-        } catch (e) {
-            // Fallback se il backend torna stringa o HTML di errore
-            throw new Error(`Errore di rete o server: ${response.status}`);
-        }
-        throw new Error(errDetails.error || 'Errore imprevisto lato server');
+        // Prova a leggere il corpo dell'errore (JSON), altrimenti restituisce oggetto vuoto
+        const errDetails = await response.json().catch(() => ({}));
+        const error = new Error(errDetails.error || 'Errore imprevisto lato server');
+        error.status = response.status;
+        throw error;
     }
 }
 

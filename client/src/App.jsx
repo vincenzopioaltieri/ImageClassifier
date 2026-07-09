@@ -56,6 +56,10 @@ function App() {
         // Nessuna sessione attiva (errore 401), pulisco lo stato
         setUser(null);
         setLoggedIn(false);
+        // Server spento
+        if (err.message.includes("fetch")) {
+          setGlobalError("Impossibile contattare il server. Verifica che il backend sia in esecuzione.");
+        }
       } finally {
         setLoading(false);
       }
