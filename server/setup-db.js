@@ -27,7 +27,7 @@ const setupDatabase = async () => {
       CREATE TABLE tournaments (
         code TEXT PRIMARY KEY,
         creator_id INTEGER NOT NULL,
-        difficulty TEXT NOT NULL,
+        difficulty TEXT NOT NULL CHECK (difficulty IN ('EASY', 'MEDIUM', 'HARD')),
         FOREIGN KEY (creator_id) REFERENCES users (id)
       )
     `);
@@ -36,9 +36,9 @@ const setupDatabase = async () => {
   await dbRun(`
       CREATE TABLE statistics (
         user_id INTEGER NOT NULL,
-        difficulty TEXT NOT NULL,
-        played INTEGER DEFAULT 0,
-        won INTEGER DEFAULT 0,
+        difficulty TEXT NOT NULL CHECK (difficulty IN ('EASY', 'MEDIUM', 'HARD')),
+        played INTEGER DEFAULT 0 CHECK (played >= 0),
+        won INTEGER DEFAULT 0 CHECK (won >= 0 AND won <= played),
         PRIMARY KEY (user_id, difficulty),
         FOREIGN KEY (user_id) REFERENCES users (id)
       )

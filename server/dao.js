@@ -37,7 +37,7 @@ export const getUser = async (username, password) => {
 export const getUserById = async (id) => {
   try {
     const row = await dbGet('SELECT * FROM users WHERE id = ?', [id]);
-    if (!row) return { error: 'User not found.' };
+    if (!row) return null;
     return new User(row.id, row.username);
   } catch (err) {
     throw err; // o gestiscilo come preferisci

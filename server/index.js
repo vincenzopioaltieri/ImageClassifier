@@ -145,10 +145,22 @@ app.post('/api/match/casual', isNotLoggedIn, [
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
     try {
+        const key = getMatchKey(req);
+        let matchState = activeMatches.get(key);
+
+        // Idempotenza per StrictMode: se c'è già una partita casuale intonsa, la restituisce senza sovrascriverla
+        if (matchState && matchState.type === 'casual' && matchState.difficulty === req.body.difficulty && matchState.shots.length === 0) {
+            return res.status(200).json({
+                size: matchState.size,
+                maxTorpedoes: matchState.maxTorpedoes,
+                torpedoesFired: 0,
+                shots: []
+            });
+        }
         const board = generateBoard(req.body.difficulty);
 
         // Partita
-        const matchState = {
+        matchState = {
             type: 'casual',
             difficulty: req.body.difficulty,
             ...board,
@@ -158,8 +170,6 @@ app.post('/api/match/casual', isNotLoggedIn, [
             won: false
         };
 
-        // Estrae il session id per andare a creare la chiave
-        const key = getMatchKey(req);
         // Partita aggiunta a quelle attive
         activeMatches.set(key, matchState);
 
@@ -195,8 +205,26 @@ app.post('/api/tournaments', isLoggedIn, [
 });
 
 // Partecipazione torneo
-app.post('/api/match/tournament/:code', isLoggedIn, async (req, res) => {
+app.post('/api/match/tournament/:code', isLoggedIn, [
+    check('code').isAlphanumeric().isLength({ min: 6, max: 6 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
+
     try {
+        const key = getMatchKey(req);
+        let matchState = activeMatches.get(key);
+
+        // Idempotenza per StrictMode
+        if (matchState && matchState.type === 'tournament' && matchState.tournamentCode === req.params.code && matchState.shots.length === 0) {
+            return res.status(200).json({
+                size: matchState.size,
+                maxTorpedoes: matchState.maxTorpedoes,
+                torpedoesFired: 0,
+                shots: [],
+                difficulty: matchState.difficulty
+            });
+        }
         // Proviamo a farci restituire il torneo cercato
         const tournament = await dao.getTournament(req.params.code);
         if (tournament.error) return res.status(404).json(tournament);
@@ -205,9 +233,10 @@ app.post('/api/match/tournament/:code', isLoggedIn, async (req, res) => {
         const board = generateBoard(tournament.difficulty, tournament.code);
 
         // Partita
-        const matchState = {
+        matchState = {
             type: 'tournament',
             difficulty: tournament.difficulty,
+            tournamentCode: tournament.code,
             ...board,
             shots: [],
             torpedoesFired: 0,
@@ -215,8 +244,6 @@ app.post('/api/match/tournament/:code', isLoggedIn, async (req, res) => {
             won: false
         };
 
-        // Estrae user id
-        const key = getMatchKey(req);
         // Aggiunge la partita a quelle attive
         activeMatches.set(key, matchState);
 
@@ -296,6 +323,11 @@ app.get('/api/statistics', async (req, res) => {
     } catch (e) {
         res.status(500).json({ error: 'Errore nel recupero delle statistiche' });
     }
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    res.status(err.status || 500).json({ error: err.message || 'Errore interno del server' });
 });
 
 // Avvio server
