@@ -1,0 +1,64 @@
+### User Authentication
+
+### Login
+POST http://localhost:3001/api/sessions
+Content-Type: application/json
+
+{
+    "username": "user1",
+    "password": "password"
+}
+
+###
+
+### Check Auth
+GET http://localhost:3001/api/sessions/current
+
+###
+
+### Logout
+DELETE http://localhost:3001/api/sessions/current
+
+###
+
+### Statistics
+GET http://localhost:3001/api/statistics
+
+###
+
+### Game APIs
+
+### Start Casual Game (EASY)
+POST http://localhost:3001/api/match/casual
+Content-Type: application/json
+
+{
+    "difficulty": "EASY"
+}
+
+###
+
+### Create Tournament (Requires Login)
+POST http://localhost:3001/api/tournaments
+Content-Type: application/json
+
+{
+    "difficulty": "EASY"
+}
+
+###
+
+### Join Tournament (Requires Login)
+# Sostituire con il codice restituito sopra
+POST http://localhost:3001/api/match/tournament/CODICTEST
+
+###
+
+### Fire Torpedo
+POST http://localhost:3001/api/match/fire
+Content-Type: application/json
+
+{
+    "row": 0,
+    "col": 0
+}
