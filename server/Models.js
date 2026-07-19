@@ -7,6 +7,7 @@ export class User {
 }
 
 export class Stat {
+
   constructor(userId, difficulty, played, won) {
     this.userId = userId;
     this.difficulty = difficulty;

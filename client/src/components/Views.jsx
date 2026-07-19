@@ -1,5 +1,3 @@
-// --- VISTE DELL'APPLICAZIONE (Pagine) ---
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import { Row, Col, Card, Button, Table, Alert, Spinner, Badge } from 'react-bootstrap';
@@ -7,38 +5,36 @@ import { LoginForm } from './AuthComponents';
 import { Board, MatchInfo } from './GameComponents';
 import API from '../API/API';
 
-// --- VISTA HOME ---
-
 export function HomeRoute(props) {
-    // A seconda di loggedIn cambia l'interfaccia (Ospite vs Utente loggato)
+    // A seconda di loggedIn cambia l'interfaccia
     const { loggedIn } = props;
-    // Funzione navigate per i redirect
+    // Funzione navigate
     const navigate = useNavigate();
 
-    // Stati locali per la gestione dei Tornei
+    // Stati locali per i Tornei
     const [tournDifficulty, setTournDifficulty] = useState('MEDIUM');
     const [generatedCode, setGeneratedCode] = useState('');
     const [joinCode, setJoinCode] = useState('');
     const [tournError, setTournError] = useState('');
     const [creating, setCreating] = useState(false);
 
-    // Gestore avvio partita casuale
+    // Partita casuale
     const startCasual = (difficulty) => {
-        // Modifica URL, la route GameRoute farà il resto
+        // Modifica URL
         navigate(`/casual/${difficulty}`);
     };
 
-    // Gestore creazione torneo (solo loggati)
+    // Creazione torneo
     const handleCreateTournament = async () => {
         setTournError('');
-        // Setto lo stato di caricamento per lo spinner
+        // Setto lo stato di caricamento
         setCreating(true);
         try {
             const result = await API.createTournament(tournDifficulty);
-            // Salva il codice del torneo generato in generatedCode per mostrarlo a schermo
+            // Salva il codice del torneo generato in generatedCode
             setGeneratedCode(result.code);
         } catch (err) {
-            // Gestione errore di connessione col server
+            // Gestione errore
             if (err.message.includes("fetch")) {
                 setTournError("Impossibile contattare il server. Verifica che il backend sia in esecuzione.");
             } else {
@@ -50,13 +46,11 @@ export function HomeRoute(props) {
         }
     };
 
-    // Gestore partecipazione a torneo
+    // Partecipazione torneo
     const handleJoinTournament = (e) => {
-        // Fermiamo il submit del form HTML per evitare ricaricamenti di pagina
+        // Fermiamo caricamento pagina (dato dal form HTML)
         e.preventDefault();
         const code = joinCode.trim().toUpperCase();
-        
-        // Validazione regex lato client: solo 6 caratteri alfanumerici
         if (/^[A-Z0-9]{6}$/.test(code)) {
             navigate(`/tournament/${code}`);
         } else {
@@ -75,14 +69,11 @@ export function HomeRoute(props) {
                 </div>
 
                 <Row className="g-4">
-                    {/* Sezione Casuale */}
                     <Col md={6}>
                         <Card className="shadow-sm text-center h-100 border-0 rounded-4">
                             <Card.Body className="p-4 p-md-5 d-flex flex-column justify-content-center">
                                 <Card.Title className="fw-bold fs-4 text-primary mb-3">Partita Casuale</Card.Title>
                                 <Card.Text className="text-muted mb-4">Gioca subito in singolo, nessuna registrazione richiesta.</Card.Text>
-                                
-                                {/* Mostra i pulsanti di difficoltà se ospite, altrimenti mostra l'avviso */}
                                 {!loggedIn ? (
                                     <div className="d-flex flex-wrap justify-content-center gap-3 mt-auto">
                                         <Button variant="success" className="rounded-pill px-4 fw-bold shadow-sm" onClick={() => startCasual('EASY')}>EASY</Button>
@@ -100,13 +91,11 @@ export function HomeRoute(props) {
                         </Card>
                     </Col>
 
-                    {/* Sezione Torneo */}
                     <Col md={6}>
                         <Card className="shadow-sm h-100 border-0 rounded-4">
                             <Card.Body className="p-4 p-md-5 d-flex flex-column justify-content-center">
                                 <Card.Title className="text-center fw-bold fs-4 text-primary mb-3">Tornei</Card.Title>
 
-                                {/* Blocco Ospite: invio al Login */}
                                 {!loggedIn ? (
                                     <div className="text-center mt-3">
                                         <Card.Text className="text-muted mb-3">Partecipa a sfide alla pari o crea il tuo torneo.</Card.Text>
@@ -114,7 +103,6 @@ export function HomeRoute(props) {
                                         <Button as={Link} to="/login" variant="primary" className="rounded-pill px-4 fw-bold shadow-sm mt-2">Vai al Login</Button>
                                     </div>
                                 ) : (
-                                    // Blocco Autenticato: creazione e unione tornei
                                     <>
                                         {tournError && <Alert variant="danger" className="p-3 text-center rounded-4 border-0 shadow-sm">{tournError}</Alert>}
 
@@ -137,7 +125,6 @@ export function HomeRoute(props) {
                                                     </Button>
                                                 </div>
                                             ) : (
-                                                // Mostra il codice generato pronto per essere giocato
                                                 <Alert variant="success" className="text-center p-3 mb-0 rounded-4 border-0 shadow-sm">
                                                     Codice: <strong className="fs-5">{generatedCode}</strong>
                                                     <div className="mt-3">
@@ -177,11 +164,9 @@ export function HomeRoute(props) {
     );
 }
 
-// --- VISTA LOGIN ---
-
 export function LoginRoute(props) {
     const location = useLocation();
-    // Se proveniamo da una route protetta (es. si prova a entrare in un torneo senza sessione)
+    // Se proveniamo da una route protetta, mostriamo un avviso
     const message = location.state?.fromProtectedRoute ? "Effettua il login per accedere al torneo." : "";
 
     return (
@@ -193,23 +178,19 @@ export function LoginRoute(props) {
     );
 }
 
-// --- VISTA GIOCO (Casuale o Torneo) ---
-
 export function GameRoute(props) {
 
-    // modalita' passata dal parent (App.jsx)
     const { mode } = props;
     const { difficulty, code } = useParams();
     const navigate = useNavigate();
 
-    // Stati locali della partita e dell'interfaccia
     const [matchState, setMatchState] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        // Validation: se manca il parametro obbligatorio, torniamo alla home
+        // Validation: se manca il parametro, torniamo alla home
         const validDifficulties = ['EASY', 'MEDIUM', 'HARD'];
         if (mode === 'casual' && (!difficulty || !validDifficulties.includes(difficulty))) {
             navigate('/', { replace: true });
@@ -220,7 +201,6 @@ export function GameRoute(props) {
             return;
         }
 
-        // Funzione per inizializzare o recuperare il match dal backend
         const initMatch = async () => {
             try {
                 let initialMatch;
@@ -231,7 +211,6 @@ export function GameRoute(props) {
                 }
                 setMatchState(initialMatch);
             } catch (err) {
-                // Gestione down del server
                 if (err.message.includes("fetch")) {
                     setErrorMsg("Impossibile contattare il server. Verifica che il backend sia in esecuzione.");
                 } else {
@@ -245,7 +224,7 @@ export function GameRoute(props) {
         initMatch();
     }, [mode, difficulty, code, navigate]);
 
-    // 1. Estraiamo le dipendenze stabili per evitare null pointer
+    // 1. Estraiamo dipendenze stabili
     const shots = matchState?.shots || [];
     const solutionGrid = matchState?.solutionGrid || null;
     const size = matchState?.size || 0;
@@ -255,12 +234,12 @@ export function GameRoute(props) {
     const cellStatusMap = (() => {
         const map = new Map();
 
-        // Prima mappiamo i colpi esplosi dall'utente
+        // Prima mappiamo i colpi esplosi
         for (let s of shots) {
             map.set(`${s.r}-${s.c}`, s.result);
         }
 
-        // Se c'è la solutionGrid (cioè a fine partita), sovrascriviamo le celle delle navi non colpite per renderle visibili
+        // Se c'è la solutionGrid (fine partita), sovrascriviamo le celle nave non colpite
         if (solutionGrid) {
             for (let r = 0; r < size; r++) {
                 for (let c = 0; c < size; c++) {
@@ -275,9 +254,7 @@ export function GameRoute(props) {
         return map;
     })();
 
-    // Gestore per il click su una cella della griglia
     const handleCellClick = async (row, col) => {
-        // Ignoriamo i click se stiamo già caricando un'azione o se la partita è finita
         if (actionLoading || matchState.gameOver) return;
 
         try {
@@ -286,7 +263,7 @@ export function GameRoute(props) {
             const shotResult = await API.fireTorpedo(row, col);
 
             // Nota backend: API.fireTorpedo restituisce il singolo esito, non l'intero array shots.
-            // Pertanto, dobbiamo aggiornare l'array locale unendo il nuovo colpo al precedente state.
+            // Pertanto, dobbiamo aggiornare l'array locale unendo il nuovo colpo.
             setMatchState(prev => ({
                 ...prev,
                 torpedoesFired: shotResult.torpedoesFired,
@@ -302,12 +279,10 @@ export function GameRoute(props) {
         }
     };
 
-    // Render loading iniziale
     if (loading) {
         return <div className="text-center mt-5"><Spinner animation="border" /> Avvio partita...</div>;
     }
 
-    // Render errore critico fatale all'avvio
     if (!matchState) {
         return (
             <Alert variant="danger" className="text-center mt-5">
@@ -319,15 +294,14 @@ export function GameRoute(props) {
         );
     }
 
+
     return (
         <Row className="justify-content-center">
             <Col lg={8}>
-                {/* Visualizza errori interattivi (es. "Hai già sparato in questa cella") */}
                 {errorMsg && <Alert variant="danger" dismissible onClose={() => setErrorMsg('')}>{errorMsg}</Alert>}
 
                 <MatchInfo matchState={matchState} mode={mode} code={code} />
 
-                {/* Opacizza la griglia durante il caricamento del colpo (feedback visivo per l'utente) */}
                 <div className={actionLoading ? 'opacity-75' : ''}>
                     <Board
                         size={matchState.size}
@@ -341,19 +315,15 @@ export function GameRoute(props) {
     );
 }
 
-// --- VISTA CLASSIFICHE GLOBALI ---
-
 export function StatsRoute() {
     const [stats, setStats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        // Recupera i dati dal server per comporre la classifica
         API.getStats()
             .then(data => setStats(data))
             .catch(err => {
-                // Gestione down del server
                 if (err.message.includes('fetch')) {
                     setErrorMsg('Impossibile contattare il server. Verifica che il backend sia in esecuzione.');
                 } else {
@@ -363,7 +333,6 @@ export function StatsRoute() {
             .finally(() => setLoading(false));
     }, []);
 
-    // Render in attesa del backend
     if (loading) {
         return <div className="text-center mt-5"><Spinner animation="border" /></div>;
     }
@@ -372,8 +341,6 @@ export function StatsRoute() {
         <Row className="justify-content-center">
             <Col md={10} lg={8}>
                 <h2 className="mb-4 text-primary fw-bold text-center">🏆 Classifica Globale</h2>
-                
-                {/* Messaggio di errore, altrimenti Tabella */}
                 {errorMsg && <Alert variant="danger" className="rounded-4 border-0 shadow-sm">{errorMsg}</Alert>}
 
                 {!errorMsg && stats.length === 0 ? (
@@ -410,8 +377,6 @@ export function StatsRoute() {
         </Row>
     );
 }
-
-// --- VISTA FALLBACK ---
 
 export function NotFoundRoute() {
     return <div>Route non trovata!</div>;
